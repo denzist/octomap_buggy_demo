@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="use_sim_time" value="true"/>
+
+  <include file="$(find octomap_buggy_demo)/launch/willow_garage_world.launch"/>
+
+  <param name="robot_description"
+   command="$(find xacro)/xacro.py '$(find buggy_description)/urdf/buggy_with_tilt_unit.xacro'" />
+
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+  args="-urdf -model robot -param robot_description -x -3. -y 5. -z 0.5"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_st_pub" >
+     <remap from="joint_states" to="/gazebo/joint_states" />
+  </node>
+
+  <include file="$(find octomap_buggy_demo)/launch/joy_teleop.launch"/>
+
+  <node pkg="buggy_controller" type="buggy_controller.py" name="buggy_controller"/>
+
+  <node pkg="octomap_buggy_demo" type="scan_to_point_cloud_tf" name="scan_to_point_cloud_tf" output="screen"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find octomap_buggy_demo)/rviz/config.rviz"/>
+
+  <node name="octomap_server" type="octomap_server_node" pkg="octomap_server">
+    <remap from="/cloud_in" to="/cloud" />
+    <param name="frame_id" value="ground_truth_pose"/>
+    <param name="base_frame_id" value="base_link"/>
+    <param name="resolution" value="0.10"/>
+    <param name="sensor_model/max_range" value="30."/>
+    <param name="pointcloud_min_z" value="0."/>
+    <param name="pointcloud_max_z" value="1.5"/>
+  </node>
+
+</launch>
+
